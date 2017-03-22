@@ -1,6 +1,6 @@
 {
   "name": "aws-dynamodb-streams",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Streams for ease dynamo db queries and scans manipulation.",
   "main": "lib/index.js",
   "types": "lib/index",
