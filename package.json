@@ -1,0 +1,38 @@
+{
+  "name": "aws-dynamodb-streams",
+  "version": "1.0.0",
+  "description": "Streams for ease dynamo db queries and scans manipulation.",
+  "main": "lib/index.js",
+  "types": "lib/index",
+  "files": [
+    "lib/"
+  ],
+  "scripts": {
+    "prepublish": "npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npm run typescript:compile",
+    "typescript:compile": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AitorGuerrero/aws-dynamodb-streams.git"
+  },
+  "keywords": [
+    "aws",
+    "dynamodb",
+    "stream"
+  ],
+  "author": "Aitor Guerrero",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AitorGuerrero/aws-dynamodb-streams/issues"
+  },
+  "homepage": "https://github.com/AitorGuerrero/aws-dynamodb-streams#readme",
+  "dependencies": {
+    "@types/node": "^7.0.8",
+    "typescript": "^2.2.1"
+  },
+  "devDependencies": {
+    "aws-sdk": "^2.30.0"
+  }
+}
