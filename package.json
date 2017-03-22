@@ -8,9 +8,10 @@
     "lib/"
   ],
   "scripts": {
-    "prepublish": "npm run build",
+    "prepublish": "npm run clean & npm run build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npm run typescript:compile",
+    "clean": "rm -Rf lib",
     "typescript:compile": "tsc"
   },
   "repository": {
