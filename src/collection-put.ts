@@ -10,7 +10,7 @@ export class CollectionPut extends Transform {
     }
 
     protected _transform(chunk: any, encoding, callback) {
-        this.write(this.buildWriteRequest(chunk));
+        this.push(this.buildWriteRequest(chunk));
         callback();
     }
 
