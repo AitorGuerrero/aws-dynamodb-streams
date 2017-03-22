@@ -1,7 +1,5 @@
 # Builds
-**/*.js
-**/*.js.map
-**/*.d.ts
+lib
 
 # IDE
 .idea
