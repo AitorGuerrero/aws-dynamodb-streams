@@ -30,10 +30,10 @@
   },
   "homepage": "https://github.com/AitorGuerrero/aws-dynamodb-streams#readme",
   "dependencies": {
-    "@types/node": "^7.0.8",
-    "typescript": "^2.2.1"
   },
   "devDependencies": {
+    "@types/node": "^7.0.8",
+    "typescript": "^2.2.1",
     "aws-sdk": "^2.30.0"
   }
 }
