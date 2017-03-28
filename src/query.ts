@@ -6,8 +6,8 @@ import {DocumentClient} from "aws-sdk/lib/dynamodb/document_client";
 export class Query extends Request<DocumentClient.QueryInput, DocumentClient.QueryOutput> {
     constructor(
         documentClient: DocumentClient,
-        scanInput: DocumentClient.QueryInput
+        queryInput: DocumentClient.QueryInput
     ) {
-        super(documentClient.query, scanInput);
+        super((p, cb) => documentClient.query(p, cb), queryInput);
     }
 }

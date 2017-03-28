@@ -6,6 +6,6 @@ export class Scan extends Request<DocumentClient.QueryInput, DocumentClient.Quer
         documentClient: DocumentClient,
         scanInput: DocumentClient.QueryInput
     ) {
-        super(documentClient.scan, scanInput);
+        super((p, cb) => documentClient.scan(p, cb), scanInput);
     }
 }

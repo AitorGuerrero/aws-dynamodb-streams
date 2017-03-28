@@ -36,6 +36,7 @@ export class Request<I, O> extends Readable {
         if (this.cachePos >= this.cache.length) {
             if (this.listCompleted) return null;
             await this.loadBatch();
+            if (this.cache.length === 0) return null;
             this.cachePos = 0;
         }
         return this.cache[this.cachePos++];
