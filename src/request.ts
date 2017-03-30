@@ -29,13 +29,17 @@ export class Request<I, O> extends Readable {
     }
 
     async _read() {
-        this.push(await this.next());
+    	try {
+        	this.push(await this.next());
+		} catch (err) {
+			this.emit('error', err);
+		}
     }
 
     private async next() {
         if (this.cachePos >= this.cache.length) {
             if (this.listCompleted) return null;
-            await this.loadBatch();
+			await this.loadBatch();
             if (this.cache.length === 0) return null;
             this.cachePos = 0;
         }
