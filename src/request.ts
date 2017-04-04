@@ -28,7 +28,7 @@ export class Request<I, O> extends Readable {
         this.cache = [];
         this.cachePos = 0;
         this.listCompleted = false;
-        this.left = input.Limit || Infinity;
+        this.left = input.Limit !== undefined ? input.Limit : Infinity;
     }
 
     async _read() {
