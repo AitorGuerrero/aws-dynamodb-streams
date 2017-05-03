@@ -13,7 +13,7 @@ export class Put extends Writable {
         this.on('finish', () => this.flush());
     }
 
-    protected _write(chunk: DocumentClient.BatchWriteItemRequestMap, encoding,callback) {
+    _write(chunk: DocumentClient.BatchWriteItemRequestMap, encoding,callback) {
         Object.keys(chunk).forEach(tableName => {
             if (!Array.isArray(this.batchRequests[tableName])) this.batchRequests[tableName] = [];
             chunk[tableName].forEach(document => this.batchRequests[tableName].push(document));
