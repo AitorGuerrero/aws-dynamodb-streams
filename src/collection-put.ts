@@ -9,12 +9,12 @@ export class CollectionPut extends Transform {
         super({objectMode: true});
     }
 
-    _transform(chunk: any, encoding, callback) {
+    _transform(chunk: any, encoding: any, callback: any) {
         this.push(this.buildWriteRequest(chunk));
         callback();
     }
 
-    private buildWriteRequest(chunk): DocumentClient.WriteRequest {
+    private buildWriteRequest(chunk: any): DocumentClient.WriteRequest {
         return {
             [this.tableName]: {
                 PutRequest: chunk,
