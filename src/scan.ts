@@ -1,6 +1,7 @@
 import {Request} from './request';
 import {DocumentClient} from 'aws-sdk/lib/dynamodb/document_client';
 import ScanInput = DocumentClient.ScanInput;
+import ScanOutput = DocumentClient.ScanOutput;
 
 export class Scan extends Request<DocumentClient.QueryInput> {
     constructor(
@@ -11,7 +12,7 @@ export class Scan extends Request<DocumentClient.QueryInput> {
     }
 
     async makeQuery(i: ScanInput) {
-    	return (new Promise((rs, rj) => {
+    	return (new Promise<ScanOutput>((rs, rj) => {
         	this.documentClient.scan(i, (err, result) => {
 				// console.log('Returned', result.Items.length, 'Scanned', result.ScannedCount, 'LastEvaluatedKey', result.LastEvaluatedKey);
         		if (err) rj(err);

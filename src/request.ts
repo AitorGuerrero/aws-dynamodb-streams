@@ -7,8 +7,8 @@ export interface Input {
 }
 
 export interface Output {
-    LastEvaluatedKey: DocumentClient.AttributeMap;
-    Items: DocumentClient.AttributeMap[];
+    LastEvaluatedKey?: DocumentClient.AttributeMap;
+    Items?: DocumentClient.AttributeMap[];
 }
 
 export abstract class Request<I> extends Readable {
