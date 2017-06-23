@@ -11,24 +11,21 @@ export interface Output {
     Items: DocumentClient.AttributeMap[];
 }
 
-export class Request<I, O> extends Readable {
+export abstract class Request<I> extends Readable {
 
-    private reading: boolean;
-    private listCompleted: boolean;
     private cache: DocumentClient.AttributeMap[];
-    private cachePos: number;
-    private left: number;
+	private startKey: DocumentClient.AttributeMap = null;
+
+    abstract makeQuery(i: I): Promise<Output>;
 
     constructor(
-        private makeQuery: (i: I, callback: (err: Error, o: O & Output) => void) => void,
         private input: I & Input
     ) {
-        super({ objectMode: true });
-        this.reading = false;
+        super({
+			objectMode: true,
+			highWaterMark: 0,
+        });
         this.cache = [];
-        this.cachePos = 0;
-        this.listCompleted = false;
-        this.left = input.Limit !== undefined ? input.Limit : Infinity;
     }
 
     async _read() {
@@ -40,27 +37,33 @@ export class Request<I, O> extends Readable {
     }
 
     private async next() {
-        if (this.cachePos >= this.cache.length) {
-            if (this.listCompleted) return null;
-			await this.loadBatch();
-            if (this.cache.length === 0) return null;
-            this.cachePos = 0;
-        }
-        return this.cache[this.cachePos++];
+		if (this.isCacheEmpty()) {
+			if (this.isListCompleted()) return null;
+			await this.fillCache();
+	        if (this.isCacheEmpty()) return null;
+		}
+
+        return this.cache.shift();
     }
 
-    private async loadBatch() {
-    	if (this.listCompleted) return;
-        const result = await (new Promise<O & Output>((rs, rj) => {
-            this.makeQuery(this.input, (err, result) => {
-                if (err) rj(err);
-                else rs(result);
-            });
-        }));
-        this.left -= result.Items.length;
-        this.input.ExclusiveStartKey = result.LastEvaluatedKey;
-		this.input.Limit = this.left !== Infinity ? this.left : undefined;
-        this.listCompleted = this.input.ExclusiveStartKey === undefined || this.left <= 0;
-        this.cache = result.Items;
+    private async fillCache() {
+		do this.cache = await this.loadBatch();
+		while(this.isCacheEmpty() && !this.isListCompleted());
+	}
+
+    private async loadBatch(): Promise<DocumentClient.AttributeMap[]> {
+    	if (this.isListCompleted()) return [];
+		const result = await this.makeQuery(Object.assign({ExclusiveStartKey: this.startKey}, this.input));
+        this.startKey = result.LastEvaluatedKey;
+
+        return result.Items;
     }
+
+	private isListCompleted() {
+    	return this.startKey === undefined;
+	}
+
+    private isCacheEmpty() {
+    	return this.cache.length === 0;
+	}
 }
