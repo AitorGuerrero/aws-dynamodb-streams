@@ -9,6 +9,7 @@ export interface Input {
 export interface Output {
     LastEvaluatedKey?: DocumentClient.AttributeMap;
     Items?: DocumentClient.AttributeMap[];
+	Count?: number;
 }
 
 export abstract class Request<I> extends Readable {
@@ -27,6 +28,10 @@ export abstract class Request<I> extends Readable {
         });
         this.cache = [];
     }
+
+    public async count() {
+    	return (await this.makeQuery(this.composeCountInput())).Count;
+	}
 
     async _read() {
     	try {
@@ -65,5 +70,12 @@ export abstract class Request<I> extends Readable {
 
     private isCacheEmpty() {
     	return this.cache.length === 0;
+	}
+
+	private composeCountInput() {
+    	return Object.assign({}, this.input, {
+			Select: 'COUNT',
+			Limit: undefined,
+		});
 	}
 }
