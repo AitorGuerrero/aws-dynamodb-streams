@@ -7,7 +7,7 @@ export default class RecordSet {
 	public offset: number;
 	constructor(
 		private dc: DocumentClient,
-		private query: DocumentClient.QueryInput,
+		public query: DocumentClient.QueryInput,
 	) {
 		this.limit = Infinity;
 		this.offset = 0;
@@ -28,6 +28,8 @@ export default class RecordSet {
 		return sliced;
 	}
 }
+
+
 
 class Limit extends Transform {
 
