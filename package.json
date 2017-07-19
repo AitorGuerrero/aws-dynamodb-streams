@@ -33,6 +33,6 @@
   "devDependencies": {
     "@types/node": "^7.0.8",
     "typescript": "^2.3.2",
-    "aws-sdk": "^2.30.0"
+    "aws-sdk": "^2.7.9"
   }
 }
