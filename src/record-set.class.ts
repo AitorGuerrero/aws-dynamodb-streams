@@ -13,7 +13,7 @@ export default class RecordSet {
 		this.offset = 0;
 	}
 	get count() {
-		return new Promise((rs, rj) => {
+		return new Promise<number>((rs, rj) => {
 			this.dc.scan(Object.assign({Select: 'COUNT'}, this.query), (err, data) => {
 				if (err) rj(err);
 				else rs(data.Count);
