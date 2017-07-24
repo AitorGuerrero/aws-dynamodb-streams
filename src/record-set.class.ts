@@ -5,6 +5,7 @@ import {Scan} from './scan';
 export default class RecordSet {
 	public limit: number;
 	public offset: number;
+	private _stream: Readable;
 	constructor(
 		private dc: DocumentClient,
 		public query: DocumentClient.QueryInput,
@@ -21,11 +22,15 @@ export default class RecordSet {
 		});
 	}
 	get stream() {
-		const scan = new Scan(this.dc, this.query);
-		const limited: Readable = this.limit !== Infinity ? scan.pipe(new Limit(this.limit)) : scan;
-		const sliced: Readable = this.offset !== 0 ? limited.pipe(new Offset(this.offset)) : limited;
+		if (this._stream === undefined) {
+			const scan = new Scan(this.dc, this.query);
+			const limited: Readable = this.limit !== Infinity ? scan.pipe(new Limit(this.limit)) : scan;
+			const sliced: Readable = this.offset !== 0 ? limited.pipe(new Offset(this.offset)) : limited;
 
-		return sliced;
+			this._stream = sliced;
+		}
+
+		return this._stream;
 	}
 }
 
