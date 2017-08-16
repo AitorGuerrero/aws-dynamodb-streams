@@ -1,21 +1,22 @@
 import {DocumentClient} from 'aws-sdk/lib/dynamodb/document_client';
 import {Duplex, Readable, Transform, Writable} from 'stream';
 import {Scan} from './scan';
+import {Query} from './query';
 
-export default class RecordSet {
+export default class RecordSet<R> {
 	public limit: number;
 	public offset: number;
 	private _stream: Readable;
 	constructor(
 		private dc: DocumentClient,
-		public query: DocumentClient.QueryInput,
+		public request: R & (DocumentClient.ScanInput | DocumentClient.QueryInput),
 	) {
 		this.limit = Infinity;
 		this.offset = 0;
 	}
 	get count() {
 		return new Promise<number>((rs, rj) => {
-			this.dc.scan(Object.assign({Select: 'COUNT'}, this.query), (err, data) => {
+			this.dc.scan(Object.assign({Select: 'COUNT'}, this.request), (err, data) => {
 				if (err) rj(err);
 				else rs(data.Count);
 			});
@@ -23,8 +24,8 @@ export default class RecordSet {
 	}
 	get stream() {
 		if (this._stream === undefined) {
-			const scan = new Scan(this.dc, this.query);
-			const limited: Readable = this.limit !== Infinity ? scan.pipe(new Limit(this.limit)) : scan;
+			const resultStream = isQueryInput(this.request) ? new Query(this.dc, this.request) : new Scan(this.dc, this.request);
+			const limited: Readable = this.limit !== Infinity ? resultStream.pipe(new Limit(this.limit)) : resultStream;
 			const sliced: Readable = this.offset !== 0 ? limited.pipe(new Offset(this.offset)) : limited;
 
 			this._stream = sliced;
@@ -66,4 +67,8 @@ class Offset extends Transform {
 		if (this.count > this.offset) this.push(item);
 		cb();
 	}
+}
+
+function isQueryInput(i: DocumentClient.ScanInput | DocumentClient.QueryInput): i is DocumentClient.QueryInput {
+	return (i as any).KeyConditionExpression !== undefined;
 }
