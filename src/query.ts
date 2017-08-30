@@ -1,13 +1,22 @@
 import {Request} from './request';
 import {DocumentClient} from "aws-sdk/lib/dynamodb/document_client";
+import QueryInput = DocumentClient.QueryInput;
+import QueryOutput = DocumentClient.QueryOutput;
 
-
-
-export class Query extends Request<DocumentClient.QueryInput, DocumentClient.QueryOutput> {
+export class Query extends Request<DocumentClient.QueryInput> {
     constructor(
-        documentClient: DocumentClient,
-        queryInput: DocumentClient.QueryInput
+        private documentClient: DocumentClient,
+        input: DocumentClient.QueryInput
     ) {
-        super((p, cb) => documentClient.query(p, cb), queryInput);
+        super(input);
+    }
+
+    async makeQuery(i: QueryInput) {
+        return (new Promise<QueryOutput>((rs, rj) => {
+            this.documentClient.query(i, (err, result) => {
+                if (err) rj(err);
+                else rs(result);
+            });
+        }))
     }
 }
