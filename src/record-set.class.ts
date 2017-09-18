@@ -16,10 +16,17 @@ export default class RecordSet<R> {
 	}
 	get count() {
 		return new Promise<number>((rs, rj) => {
-			this.dc.scan(Object.assign({Select: 'COUNT'}, this.request), (err, data) => {
-				if (err) rj(err);
-				else rs(data.Count);
-			});
+			if (isQueryInput(this.request)) {
+				return this.dc.query(Object.assign(
+					this.request,
+					{Select: 'COUNT', },
+				), (err, data) => err ? rj(err) : rs(data.Count));
+			} else {
+				return this.dc.scan(Object.assign(
+					this.request,
+					{Select: 'COUNT', },
+				), (err, data) => err ? rj(err) : rs(data.Count));
+			}
 		});
 	}
 	get stream() {
