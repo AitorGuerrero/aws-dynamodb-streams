@@ -15,29 +15,19 @@ export default class RecordSet<R> {
 		this.offset = 0;
 	}
 	get count() {
+		const query = Object.assign({Select: 'COUNT'}, this.request);
 		return new Promise<number>((rs, rj) => {
-			if (isQueryInput(this.request)) {
-				this.dc.query(Object.assign(
-					{},
-					this.request,
-					{Select: 'COUNT', },
-				), (err, data) => err ? rj(err) : rs(data.Count));
-			} else {
-				this.dc.scan(Object.assign(
-					{},
-					this.request,
-					{Select: 'COUNT', },
-				), (err, data) => err ? rj(err) : rs(data.Count));
-			}
+			if (isQueryInput(this.request))
+				this.dc.query(query, (err, data) => err ? rj(err): rs(data.Count));
+			else
+				this.dc.scan(query, (err, data) => err ? rj(err): rs(data.Count));
 		});
 	}
 	get stream() {
 		if (this._stream === undefined) {
 			const resultStream = isQueryInput(this.request) ? new Query(this.dc, this.request) : new Scan(this.dc, this.request);
 			const limited: Readable = this.limit !== Infinity ? resultStream.pipe(new Limit(this.limit)) : resultStream;
-			const sliced: Readable = this.offset !== 0 ? limited.pipe(new Offset(this.offset)) : limited;
-
-			this._stream = sliced;
+			this._stream = this.offset !== 0 ? limited.pipe(new Offset(this.offset)) : limited;
 		}
 
 		return this._stream;
