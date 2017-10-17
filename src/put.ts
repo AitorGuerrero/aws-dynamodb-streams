@@ -1,37 +1,36 @@
-import {Writable} from "stream";
-import {DocumentClient} from "aws-sdk/lib/dynamodb/document_client";
+import {DocumentClient} from 'aws-sdk/lib/dynamodb/document_client';
+import {Writable} from 'stream';
 
 export class Put extends Writable {
 
-    protected batchRequests: DocumentClient.BatchWriteItemRequestMap;
+	protected batchRequests: DocumentClient.BatchWriteItemRequestMap;
 
-    constructor(
-        private documentClient: DocumentClient
-    ) {
-        super({objectMode: true});
-        this.batchRequests = {};
-        this.on('finish', () => this.flush());
-    }
+	constructor(private documentClient: DocumentClient) {
+		super({objectMode: true});
+		this.batchRequests = {};
+		this.on('finish', () => this.flush());
+	}
 
-    _write(chunk: DocumentClient.BatchWriteItemRequestMap, encoding: any, callback: any) {
-        Object.keys(chunk).forEach(tableName => {
-            if (!Array.isArray(this.batchRequests[tableName])) this.batchRequests[tableName] = [];
-            chunk[tableName].forEach(document => this.batchRequests[tableName].push(document));
-        });
-        callback();
-    }
+	public _write(chunk: DocumentClient.BatchWriteItemRequestMap, encoding: any, callback: any) {
+		Object.keys(chunk).forEach((tableName) => {
+			if (!Array.isArray(this.batchRequests[tableName])) {
+				this.batchRequests[tableName] = [];
+			}
+			chunk[tableName].forEach((document) => this.batchRequests[tableName].push(document));
+		});
+		callback();
+	}
 
-    async flush() {
-        let error: Error = undefined;
-        await new Promise((rs, rj) => {
-            this.documentClient.batchWrite({
-                RequestItems: this.batchRequests,
-            }, (err: Error) => {
-                error = err;
-                if (err) rj(err);
-                else rs();
-            });
-        });
-        this.emit('flushed', error);
-    }
+	public async flush() {
+		let error: Error;
+		await new Promise((rs, rj) => {
+			this.documentClient.batchWrite({
+				RequestItems: this.batchRequests,
+			}, (err: Error) => {
+				error = err;
+				err ? rj(err) : rs();
+			});
+		});
+		this.emit('flushed', error);
+	}
 }

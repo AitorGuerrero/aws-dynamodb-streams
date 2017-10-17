@@ -1,81 +1,79 @@
+import {DocumentClient} from 'aws-sdk/lib/dynamodb/document_client';
 import {Readable} from 'stream';
-import {DocumentClient} from "aws-sdk/lib/dynamodb/document_client";
 
 export interface Input {
-    Limit?: number;
-    ExclusiveStartKey?: DocumentClient.AttributeMap;
+	Limit?: number;
+	ExclusiveStartKey?: DocumentClient.AttributeMap;
 }
 
-export interface Output {
-    LastEvaluatedKey?: DocumentClient.AttributeMap;
-    Items?: DocumentClient.AttributeMap[];
+export interface IOutput {
+	LastEvaluatedKey?: DocumentClient.AttributeMap;
+	Items?: DocumentClient.AttributeMap[];
 	Count?: number;
 }
 
 export abstract class Request<I> extends Readable {
 
-    private cache: DocumentClient.AttributeMap[];
+	private cache: DocumentClient.AttributeMap[];
 	private startKey: DocumentClient.AttributeMap = null;
 
-    abstract makeQuery(i: I): Promise<Output>;
-
-    constructor(
-        private input: I & Input
-    ) {
-        super({
-			objectMode: true,
+	constructor(private input: I & Input) {
+		super({
 			highWaterMark: 0,
-        });
-        this.cache = [];
-    }
-
-    public async count() {
-    	return (await this.makeQuery(this.composeCountInput())).Count;
+			objectMode: true,
+		});
+		this.cache = [];
 	}
 
-    async _read() {
-    	try {
-        	this.push(await this.next());
+	public async count() {
+		return (await this.makeQuery(this.composeCountInput())).Count;
+	}
+
+	public async _read() {
+		try {
+			this.push(await this.next());
 		} catch (err) {
 			this.emit('error', err);
 		}
-    }
+	}
 
-    private async next() {
+	protected abstract makeQuery(i: I): Promise<IOutput>;
+
+	private async next() {
 		if (this.isCacheEmpty()) {
-			if (this.isListCompleted()) return null;
+			if (this.isListCompleted()) { return null; }
 			await this.fillCache();
-	        if (this.isCacheEmpty()) return null;
+			if (this.isCacheEmpty()) { return null; }
 		}
 
-        return this.cache.shift();
-    }
-
-    private async fillCache() {
-		do this.cache = await this.loadBatch();
-		while(this.isCacheEmpty() && !this.isListCompleted());
+		return this.cache.shift();
 	}
 
-    private async loadBatch(): Promise<DocumentClient.AttributeMap[]> {
-    	if (this.isListCompleted()) return [];
-		const result = await this.makeQuery(Object.assign({ExclusiveStartKey: this.startKey}, this.input));
-        this.startKey = result.LastEvaluatedKey;
+	private async fillCache() {
+		do { this.cache = await this.loadBatch(); }
+		while (this.isCacheEmpty() && !this.isListCompleted());
+	}
 
-        return result.Items;
-    }
+	private async loadBatch(): Promise<DocumentClient.AttributeMap[]> {
+		if (this.isListCompleted()) { return []; }
+		const result = await this.makeQuery(Object.assign({ExclusiveStartKey: this.startKey}, this.input));
+		this.startKey = result.LastEvaluatedKey;
+
+		return result.Items;
+	}
 
 	private isListCompleted() {
-    	return this.startKey === undefined;
+		return this.startKey === undefined;
 	}
 
-    private isCacheEmpty() {
-    	return this.cache.length === 0;
+	private isCacheEmpty() {
+		return this.cache.length === 0;
 	}
 
 	private composeCountInput() {
-    	return Object.assign({}, this.input, {
-			Select: 'COUNT',
+		return Object.assign({}, this.input, {
 			Limit: undefined,
+			Select: 'COUNT',
 		});
 	}
 }
