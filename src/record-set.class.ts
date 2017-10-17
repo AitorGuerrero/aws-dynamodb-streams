@@ -21,14 +21,14 @@ export default class RecordSet<R> {
 	public get stream() {
 		if (this.innerStream === undefined) {
 			const resultStream = isQueryInput(this.request) ? new Query(this.dc, this.request) : new Scan(this.dc, this.request);
-			const limited: Readable = this.limit !== Infinity ? resultStream.pipe(new LimitStream(this.limit)) : resultStream;
+			const limited = this.applyLimit(resultStream);
 			this.innerStream = this.offset !== 0 ? limited.pipe(new OffsetStream(this.offset)) : limited;
 		}
 
 		return this.innerStream;
 	}
 
-	get count() {
+	public get count() {
 		const query = Object.assign({Select: 'COUNT'}, this.request);
 		return new Promise<number>((rs, rj) => {
 			if (isQueryInput(this.request)) {
@@ -37,6 +37,19 @@ export default class RecordSet<R> {
 				this.dc.scan(query, (err, data) => err ? rj(err) : rs(data.Count));
 			}
 		});
+	}
+
+	private applyLimit(resultStream: Readable) {
+		let limited: Readable;
+		if (this.limit !== Infinity) {
+			const limitStream = new LimitStream(this.limit);
+			limited = resultStream.pipe(limitStream);
+			limitStream.on('error', () => resultStream.unpipe(limitStream));
+		} else {
+			limited = resultStream;
+		}
+
+		return limited;
 	}
 }
 

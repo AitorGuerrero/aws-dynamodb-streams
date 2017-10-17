@@ -9,7 +9,9 @@ export default class LimitStream extends Transform {
 	}
 
 	public _transform(item: any, enc: any, cb: any) {
-		if (this.count >= this.limit) { return cb(); }
+		if (this.count >= this.limit) {
+			this.destroy();
+		}
 		this.count++;
 		this.push(item);
 		if (this.count >= this.limit) { this.push(null); }
