@@ -59,7 +59,7 @@ export abstract class Request<I> extends Readable {
 		const result = await this.makeQuery(Object.assign({ExclusiveStartKey: this.startKey}, this.input));
 		this.startKey = result.LastEvaluatedKey;
 
-		return result.Items;
+		return result.Items || [];
 	}
 
 	private isListCompleted() {
