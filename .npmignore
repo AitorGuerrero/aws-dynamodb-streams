@@ -1,1 +1,4 @@
+.idea
 src
+tsconfig.json
+tslint.json
