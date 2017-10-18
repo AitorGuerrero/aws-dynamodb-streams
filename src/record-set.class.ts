@@ -6,7 +6,7 @@ import OffsetStream from './offset-stream.class';
 import {Query} from './query.class';
 import {Scan} from './scan.class';
 
-export default class RecordSet<R> {
+export class RecordSet<R> {
 	public limit: number;
 	public offset: number;
 	private innerStream: Readable;
