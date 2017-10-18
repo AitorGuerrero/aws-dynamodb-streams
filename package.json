@@ -4,9 +4,6 @@
   "description": "Streams for ease dynamo db queries and scans manipulation.",
   "main": "lib/index.js",
   "types": "lib.d/index.d.ts",
-  "files": [
-    "lib/"
-  ],
   "scripts": {
     "prepare": "npm run build",
     "preversion": "npm run testInstalls",
