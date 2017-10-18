@@ -1,5 +1,5 @@
 import {DocumentClient} from 'aws-sdk/lib/dynamodb/document_client';
-import {Request} from './request';
+import {Request} from './request.class';
 import QueryInput = DocumentClient.QueryInput;
 import QueryOutput = DocumentClient.QueryOutput;
 
