@@ -1,7 +1,7 @@
 import {IDynamoDocumentClientAsync} from 'aws-sdk-async';
 import {DocumentClient} from 'aws-sdk/lib/dynamodb/document_client';
 import {Readable} from 'stream';
-import LimitStream from './limit.class';
+import LimitStream, {limitReachedEventName} from './limit.class';
 import OffsetStream from './offset-stream.class';
 import {Query} from './query.class';
 import {Scan} from './scan.class';
@@ -41,7 +41,7 @@ export class RecordSet<R> {
 		if (this.limit !== Infinity) {
 			const limitStream = new LimitStream(this.limit);
 			limited = resultStream.pipe(limitStream);
-			limitStream.on('error', () => resultStream.unpipe(limitStream));
+			limitStream.on(limitReachedEventName, () => resultStream.unpipe(limitStream));
 		} else {
 			limited = resultStream;
 		}
