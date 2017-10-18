@@ -1,9 +1,11 @@
 {
   "compilerOptions": {
+    "declaration": true,
+    "declarationDir": "lib.d",
+    "noImplicitAny": true,
     "module": "commonjs",
     "target": "ES2015",
-    "declaration": true,
-    "outDir": "lib/"
+    "outDir": "lib"
   },
   "exclude": [
     "node_modules",

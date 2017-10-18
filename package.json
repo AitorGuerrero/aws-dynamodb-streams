@@ -3,15 +3,19 @@
   "version": "2.0.1",
   "description": "Streams for ease dynamo db queries and scans manipulation.",
   "main": "lib/index.js",
-  "types": "lib/index",
+  "types": "lib.d/index.d.ts",
   "files": [
     "lib/"
   ],
   "scripts": {
     "prepare": "npm run build",
+    "preversion": "npm run testInstalls",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "precommit": "tslint -p . && tsc --noEmit"
+    "testInstalls": "npm install . -g",
+    "testBuilds": "tsc --noEmit",
+    "testStyle": "tslint -p .",
+    "precommit": "npm run testStyle && npm run testBuilds"
   },
   "repository": {
     "type": "git",
@@ -28,7 +32,9 @@
     "url": "https://github.com/AitorGuerrero/aws-dynamodb-streams/issues"
   },
   "homepage": "https://github.com/AitorGuerrero/aws-dynamodb-streams#readme",
-  "dependencies": {},
+  "dependencies": {
+    "aws-sdk-async": "^1.0.0-4"
+  },
   "devDependencies": {
     "@types/node": "^8.0.26",
     "aws-sdk": "^2.105.0",

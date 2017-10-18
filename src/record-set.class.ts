@@ -1,9 +1,10 @@
+import {IDynamoDocumentClientAsync} from 'aws-sdk-async';
 import {DocumentClient} from 'aws-sdk/lib/dynamodb/document_client';
 import {Readable} from 'stream';
 import LimitStream from './limit.class';
-import OffsetStream from './offset-stream';
-import {Query} from './query';
-import {Scan} from './scan';
+import OffsetStream from './offset-stream.class';
+import {Query} from './query.class';
+import {Scan} from './scan.class';
 
 export default class RecordSet<R> {
 	public limit: number;
@@ -11,7 +12,7 @@ export default class RecordSet<R> {
 	private innerStream: Readable;
 
 	constructor(
-		private dc: DocumentClient,
+		private dc: IDynamoDocumentClientAsync,
 		public request: R & (DocumentClient.ScanInput | DocumentClient.QueryInput),
 	) {
 		this.limit = Infinity;
@@ -30,13 +31,9 @@ export default class RecordSet<R> {
 
 	public get count() {
 		const query = Object.assign({Select: 'COUNT'}, this.request);
-		return new Promise<number>((rs, rj) => {
-			if (isQueryInput(this.request)) {
-				this.dc.query(query, (err, data) => err ? rj(err) : rs(data.Count));
-			} else {
-				this.dc.scan(query, (err, data) => err ? rj(err) : rs(data.Count));
-			}
-		});
+		const response = isQueryInput(this.request) ? this.dc.query(query) : this.dc.scan(query);
+
+		return response.then((r) => r.Count);
 	}
 
 	private applyLimit(resultStream: Readable) {

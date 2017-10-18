@@ -1,19 +1,16 @@
+import {IDynamoDocumentClientAsync} from 'aws-sdk-async';
 import {DocumentClient} from 'aws-sdk/lib/dynamodb/document_client';
 import {Request} from './request.class';
-import ScanInput = DocumentClient.ScanInput;
-import ScanOutput = DocumentClient.ScanOutput;
 
 export class Scan extends Request<DocumentClient.QueryInput> {
 	constructor(
-		private documentClient: DocumentClient,
+		private documentClient: IDynamoDocumentClientAsync,
 		input: DocumentClient.QueryInput,
 	) {
 		super(input);
 	}
 
-	public async makeQuery(i: ScanInput) {
-		return (new Promise<ScanOutput>((rs, rj) => {
-			this.documentClient.scan(i, (err, result) => err ? rj(err) : rs(result));
-		}));
+	public async makeQuery(i: DocumentClient.ScanInput) {
+		return this.documentClient.scan(i);
 	}
 }

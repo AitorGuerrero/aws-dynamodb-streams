@@ -1,19 +1,16 @@
+import {IDynamoDocumentClientAsync} from 'aws-sdk-async';
 import {DocumentClient} from 'aws-sdk/lib/dynamodb/document_client';
 import {Request} from './request.class';
-import QueryInput = DocumentClient.QueryInput;
-import QueryOutput = DocumentClient.QueryOutput;
 
 export class Query extends Request<DocumentClient.QueryInput> {
 	constructor(
-		private documentClient: DocumentClient,
+		private documentClient: IDynamoDocumentClientAsync,
 		input: DocumentClient.QueryInput,
 	) {
 		super(input);
 	}
 
-	public async makeQuery(i: QueryInput) {
-		return (new Promise<QueryOutput>((rs, rj) => {
-			this.documentClient.query(i, (err, result) => err ? rj(err) : rs(result));
-		}));
+	public async makeQuery(i: DocumentClient.QueryInput) {
+		return this.documentClient.query(i);
 	}
 }

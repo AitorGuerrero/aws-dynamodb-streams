@@ -1,6 +1,6 @@
 # Builds
 lib
-src/**/*.js
+lib.d
 
 # IDE
 .idea
