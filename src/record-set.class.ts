@@ -22,8 +22,7 @@ export class RecordSet<R> {
 	public get stream() {
 		if (this.innerStream === undefined) {
 			const resultStream = isQueryInput(this.request) ? new Query(this.dc, this.request) : new Scan(this.dc, this.request);
-			const limited = this.applyLimit(resultStream);
-			this.innerStream = this.offset !== 0 ? limited.pipe(new OffsetStream(this.offset)) : limited;
+			this.innerStream = this.applyLimit(this.applyOffset(resultStream));
 		}
 
 		return this.innerStream;
@@ -39,7 +38,7 @@ export class RecordSet<R> {
 	private applyLimit(resultStream: Readable) {
 		let limited: Readable;
 		if (this.limit !== Infinity) {
-			const limitStream = new LimitStream(this.limit);
+			const limitStream = new LimitStream(this.limit + this.offset);
 			limited = resultStream.pipe(limitStream);
 			limitStream.on(limitReachedEventName, () => resultStream.unpipe(limitStream));
 		} else {
@@ -47,6 +46,10 @@ export class RecordSet<R> {
 		}
 
 		return limited;
+	}
+
+	private applyOffset(resultStream: Readable) {
+		return this.offset !== 0 ? resultStream.pipe(new OffsetStream(this.offset)) : resultStream;
 	}
 }
 
