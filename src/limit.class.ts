@@ -1,7 +1,5 @@
 import {Transform} from 'stream';
 
-export const limitReachedEventName = 'limit-reached';
-
 export default class LimitStream extends Transform {
 
 	private count = 0;
@@ -16,8 +14,7 @@ export default class LimitStream extends Transform {
 			this.count++;
 		}
 		if (this.count >= this.limit) {
-			this.emit(limitReachedEventName);
-			this.destroy();
+			this.push(null);
 		}
 		return cb();
 	}
