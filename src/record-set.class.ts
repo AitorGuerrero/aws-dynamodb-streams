@@ -45,9 +45,8 @@ export class RecordSet<R> {
 		limited = new LimitStream(this.limit);
 		limited.on('end', () => resultStream.unpipe(limited));
 		resultStream.on('end', () => limited.push(null));
-		resultStream.pipe(limited);
 
-		return limited;
+		return resultStream.pipe(limited);
 	}
 
 	private applyOffset(resultStream: Readable) {
@@ -57,9 +56,8 @@ export class RecordSet<R> {
 		const offsetStream = new OffsetStream(this.offset);
 		offsetStream.on('end', () => resultStream.unpipe(offsetStream));
 		resultStream.on('end', () => offsetStream.push(null));
-		resultStream.pipe(offsetStream);
 
-		return resultStream;
+		return resultStream.pipe(offsetStream);
 	}
 }
 
