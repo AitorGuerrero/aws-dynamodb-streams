@@ -1,16 +1,26 @@
-import * as AWS from 'aws-sdk';
+import {DynamoDB} from 'aws-sdk';
 import {IDynamoDocumentClientAsync} from 'aws-sdk-async';
+import {Readable} from 'stream';
 import getLastEvaluatedKey from './get-request-last-evaluated-key';
+import limitStream from './limit-stream';
 import {Query} from './query.class';
+
+export interface IQueryResponse {
+	LastEvaluatedKey: AWS.DynamoDB.DocumentClient.AttributeMap;
+	stream: Readable;
+}
 
 export function performQuery(
 	asyncDocumentClient: IDynamoDocumentClientAsync,
-	request: AWS.DynamoDB.DocumentClient.QueryInput,
-) {
+	request: DynamoDB.DocumentClient.QueryInput,
+	keySchema: DynamoDB.DocumentClient.KeySchema,
+	limit?: number,
+): IQueryResponse {
 	const stream = new Query(asyncDocumentClient, request);
+	const LastEvaluatedKey = getLastEvaluatedKey(stream);
 
 	return {
-		LastEvaluatedKey: getLastEvaluatedKey(stream),
-		stream,
+		LastEvaluatedKey,
+		stream: limitStream(stream, limit, keySchema),
 	};
 }
