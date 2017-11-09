@@ -10,7 +10,7 @@ export default function limitStream(
 		return stream;
 	}
 	const limitTransform = new StreamLimiter(limit, keySchema);
-	limitTransform.on('end', () => stream.unpipe(limitTransform));
+	limitTransform.on('limit-reached', () => stream.unpipe(limitTransform));
 
 	return stream.pipe(limitTransform);
 }
@@ -30,9 +30,9 @@ export class StreamLimiter extends Transform {
 	}
 
 	public _transform(item: any, enc: any, cb: () => void) {
-		if (this.count > this.limit) {
+		if (this.count >= this.limit) {
 			this.LastEvaluatedKey = getKeyFromElement(this.lastEvaluatedItem, this.keySchema);
-			this.push(null);
+			this.emit('limit-reached');
 		} else {
 			this.count++;
 			this.lastEvaluatedItem = item;
