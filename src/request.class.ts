@@ -14,8 +14,9 @@ export interface IOutput {
 
 export abstract class Request<I> extends Readable {
 
+	public startKey: DocumentClient.AttributeMap = null;
+
 	private cache: DocumentClient.AttributeMap[];
-	private startKey: DocumentClient.AttributeMap = null;
 
 	constructor(private input: I & Input) {
 		super({
