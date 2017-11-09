@@ -5,7 +5,7 @@ export default function limitStream(stream: Readable, limit: number, keySchema: 
 	if (limit === Infinity || limit === undefined || limit === null) {
 		return stream;
 	}
-	const limitTransform = new Transform(new StreamLimiter(limit, keySchema));
+	const limitTransform = new StreamLimiter(limit, keySchema);
 	limitTransform.on('end', () => stream.unpipe(limitTransform));
 
 	return stream.pipe(limitTransform);
