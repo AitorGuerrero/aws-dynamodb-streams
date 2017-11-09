@@ -17,10 +17,11 @@ export function performQuery(
 	limit?: number,
 ): IQueryResponse {
 	const stream = new Query(asyncDocumentClient, request);
-	const LastEvaluatedKey = getLastEvaluatedKey(stream);
+	const limitedStream = limitStream(stream, limit, keySchema);
+	const LastEvaluatedKey = getLastEvaluatedKey(limitedStream);
 
 	return {
 		LastEvaluatedKey,
-		stream: limitStream(stream, limit, keySchema),
+		stream: limitedStream,
 	};
 }

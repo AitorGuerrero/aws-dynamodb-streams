@@ -14,7 +14,7 @@ export interface IOutput {
 
 export abstract class Request<I> extends Readable {
 
-	public startKey: DocumentClient.AttributeMap = null;
+	public LastEvaluatedKey: DocumentClient.AttributeMap;
 
 	private cache: DocumentClient.AttributeMap[];
 
@@ -24,6 +24,7 @@ export abstract class Request<I> extends Readable {
 			objectMode: true,
 		});
 		this.cache = [];
+		this.LastEvaluatedKey = null;
 	}
 
 	public async count() {
@@ -57,14 +58,14 @@ export abstract class Request<I> extends Readable {
 
 	private async loadBatch(): Promise<DocumentClient.AttributeMap[]> {
 		if (this.isListCompleted()) { return []; }
-		const result = await this.makeQuery(Object.assign({ExclusiveStartKey: this.startKey}, this.input));
-		this.startKey = result.LastEvaluatedKey;
+		const result = await this.makeQuery(Object.assign({ExclusiveStartKey: this.LastEvaluatedKey}, this.input));
+		this.LastEvaluatedKey = result.LastEvaluatedKey;
 
 		return result.Items || [];
 	}
 
 	private isListCompleted() {
-		return this.startKey === undefined;
+		return this.LastEvaluatedKey === undefined;
 	}
 
 	private isCacheEmpty() {

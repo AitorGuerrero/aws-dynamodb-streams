@@ -1,7 +1,11 @@
 import {DynamoDB} from 'aws-sdk';
 import {Readable, Transform} from 'stream';
 
-export default function limitStream(stream: Readable, limit: number, keySchema: DynamoDB.DocumentClient.KeySchema) {
+export default function limitStream(
+	stream: Readable & {LastEvaluatedKey: any},
+	limit: number,
+	keySchema: DynamoDB.DocumentClient.KeySchema,
+): Readable & {LastEvaluatedKey: any} {
 	if (limit === Infinity || limit === undefined || limit === null) {
 		return stream;
 	}
