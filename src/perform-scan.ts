@@ -1,7 +1,6 @@
 import {DynamoDB} from 'aws-sdk';
 import {IDynamoDocumentClientAsync} from 'aws-sdk-async';
 import {Readable} from 'stream';
-import getLastEvaluatedKey from './get-request-last-evaluated-key';
 import limitStream from './limit-stream';
 import {Scan} from './scan.class';
 
@@ -16,11 +15,11 @@ export function performScan(
 	keySchema: DynamoDB.DocumentClient.KeySchema,
 	limit?: number,
 ): IScanResponse {
-	const stream = new Scan(asyncDocumentClient, request);
-	const LastEvaluatedKey = getLastEvaluatedKey(stream);
+	const scan = new Scan(asyncDocumentClient, request);
+	const limited = limitStream(scan, limit, keySchema);
 
 	return {
-		LastEvaluatedKey,
-		stream: limitStream(stream, limit, keySchema),
+		LastEvaluatedKey: limited.LastEvaluatedKey,
+		stream: limited,
 	};
 }

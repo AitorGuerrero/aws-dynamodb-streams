@@ -17,7 +17,7 @@ export default function limitStream(
 
 export class StreamLimiter extends Transform {
 
-	public LastEvaluatedKey: DynamoDB.DocumentClient.AttributeMap;
+	public LastEvaluatedKey: Promise<DynamoDB.DocumentClient.AttributeMap>;
 
 	private lastEvaluatedItem: DynamoDB.DocumentClient.AttributeMap;
 	private count = 0;
@@ -27,12 +27,16 @@ export class StreamLimiter extends Transform {
 		private keySchema: DynamoDB.DocumentClient.KeySchema,
 	) {
 		super({objectMode: true});
+		this.LastEvaluatedKey = new Promise<DynamoDB.DocumentClient.AttributeMap>((rs, rj) => {
+			this.on('limit-reached', () => rs(getKeyFromElement(this.lastEvaluatedItem, this.keySchema)));
+			this.on('error', rj);
+		});
 	}
 
 	public _transform(item: any, enc: any, cb: () => void) {
 		if (this.count >= this.limit) {
-			this.LastEvaluatedKey = getKeyFromElement(this.lastEvaluatedItem, this.keySchema);
 			this.emit('limit-reached');
+			this.end();
 		} else {
 			this.count++;
 			this.lastEvaluatedItem = item;

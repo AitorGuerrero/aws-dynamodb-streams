@@ -1,22 +1,24 @@
-import {DocumentClient} from 'aws-sdk/lib/dynamodb/document_client';
+import {DynamoDB} from 'aws-sdk';
 import {Readable} from 'stream';
 
 export interface Input {
 	Limit?: number;
-	ExclusiveStartKey?: DocumentClient.AttributeMap;
+	ExclusiveStartKey?: DynamoDB.DocumentClient.AttributeMap;
 }
 
 export interface IOutput {
-	LastEvaluatedKey?: DocumentClient.AttributeMap;
-	Items?: DocumentClient.AttributeMap[];
+	LastEvaluatedKey?: DynamoDB.DocumentClient.AttributeMap;
+	Items?: DynamoDB.DocumentClient.AttributeMap[];
 	Count?: number;
 }
 
 export abstract class Request<I> extends Readable {
 
-	public LastEvaluatedKey: DocumentClient.AttributeMap;
+	public LastEvaluatedKey: Promise<DynamoDB.DocumentClient.AttributeMap>;
 
-	private cache: DocumentClient.AttributeMap[];
+	private ExclusiveStartKey: DynamoDB.DocumentClient.AttributeMap;
+	private cache: DynamoDB.DocumentClient.AttributeMap[];
+	private sourceCompleted: boolean;
 
 	constructor(private input: I & Input) {
 		super({
@@ -24,7 +26,13 @@ export abstract class Request<I> extends Readable {
 			objectMode: true,
 		});
 		this.cache = [];
-		this.LastEvaluatedKey = null;
+		this.sourceCompleted = false;
+		this.LastEvaluatedKey = new Promise<DynamoDB.DocumentClient.AttributeMap>((rs, rj) => {
+			this.on('end', () => {
+				rs(this.ExclusiveStartKey);
+			});
+			this.on('error', rj);
+		});
 	}
 
 	public async count() {
@@ -43,7 +51,7 @@ export abstract class Request<I> extends Readable {
 
 	private async next() {
 		if (this.isCacheEmpty()) {
-			if (this.isListCompleted()) { return null; }
+			if (this.sourceCompleted) { return null; }
 			await this.fillCache();
 			if (this.isCacheEmpty()) { return null; }
 		}
@@ -53,19 +61,18 @@ export abstract class Request<I> extends Readable {
 
 	private async fillCache() {
 		do { this.cache = await this.loadBatch(); }
-		while (this.isCacheEmpty() && !this.isListCompleted());
+		while (this.isCacheEmpty() && !this.sourceCompleted);
 	}
 
-	private async loadBatch(): Promise<DocumentClient.AttributeMap[]> {
-		if (this.isListCompleted()) { return []; }
-		const result = await this.makeQuery(Object.assign({ExclusiveStartKey: this.LastEvaluatedKey}, this.input));
-		this.LastEvaluatedKey = result.LastEvaluatedKey;
+	private async loadBatch(): Promise<DynamoDB.DocumentClient.AttributeMap[]> {
+		if (this.sourceCompleted) { return []; }
+		const result = await this.makeQuery(Object.assign({ExclusiveStartKey: this.ExclusiveStartKey}, this.input));
+		this.ExclusiveStartKey = result.LastEvaluatedKey;
+		if (this.ExclusiveStartKey === undefined) {
+			this.sourceCompleted = true;
+		}
 
 		return result.Items || [];
-	}
-
-	private isListCompleted() {
-		return this.LastEvaluatedKey === undefined;
 	}
 
 	private isCacheEmpty() {
