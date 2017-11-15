@@ -1,18 +1,10 @@
 import {Readable} from '@aitor.guerrero/object-stream';
 import {DynamoDB} from 'aws-sdk';
+import {IDynamoDocumentClientAsync} from 'aws-sdk-async';
 
-export interface Input {
-	Limit?: number;
-	ExclusiveStartKey?: DynamoDB.DocumentClient.AttributeMap;
-}
+export type IInput = DynamoDB.DocumentClient.ScanInput | DynamoDB.DocumentClient.QueryInput;
 
-export interface IOutput {
-	LastEvaluatedKey?: DynamoDB.DocumentClient.AttributeMap;
-	Items?: DynamoDB.DocumentClient.AttributeMap[];
-	Count?: number;
-}
-
-export abstract class Request<I> extends Readable {
+export class Request extends Readable {
 
 	public LastEvaluatedKey: Promise<DynamoDB.DocumentClient.AttributeMap>;
 
@@ -20,7 +12,10 @@ export abstract class Request<I> extends Readable {
 	private cache: DynamoDB.DocumentClient.AttributeMap[];
 	private sourceCompleted: boolean;
 
-	constructor(private input: I & Input) {
+	constructor(
+		private dc: IDynamoDocumentClientAsync,
+		private input: IInput,
+	) {
 		super({highWaterMark: 0});
 		this.cache = [];
 		this.sourceCompleted = false;
@@ -32,10 +27,6 @@ export abstract class Request<I> extends Readable {
 		});
 	}
 
-	public async count() {
-		return (await this.makeQuery(this.composeCountInput())).Count;
-	}
-
 	public async _read() {
 		try {
 			this.push(await this.next());
@@ -43,8 +34,6 @@ export abstract class Request<I> extends Readable {
 			this.emit('error', err);
 		}
 	}
-
-	protected abstract makeQuery(i: I): Promise<IOutput>;
 
 	private async next() {
 		if (this.isCacheEmpty()) {
@@ -61,9 +50,10 @@ export abstract class Request<I> extends Readable {
 		while (this.isCacheEmpty() && !this.sourceCompleted);
 	}
 
-	private async loadBatch(): Promise<DynamoDB.DocumentClient.AttributeMap[]> {
+	private async loadBatch() {
 		if (this.sourceCompleted) { return []; }
-		const result = await this.makeQuery(Object.assign({ExclusiveStartKey: this.ExclusiveStartKey}, this.input));
+		const request = Object.assign({ExclusiveStartKey: this.ExclusiveStartKey}, this.input);
+		const result = isQuery(request) ? await this.dc.query(request) : await this.dc.scan(request);
 		this.ExclusiveStartKey = result.LastEvaluatedKey;
 		if (this.ExclusiveStartKey === undefined) {
 			this.sourceCompleted = true;
@@ -75,11 +65,8 @@ export abstract class Request<I> extends Readable {
 	private isCacheEmpty() {
 		return this.cache.length === 0;
 	}
+}
 
-	private composeCountInput() {
-		return Object.assign({}, this.input, {
-			Limit: undefined,
-			Select: 'COUNT',
-		});
-	}
+function isQuery(input: any): input is DynamoDB.DocumentClient.QueryInput {
+	return input.KeyConditionExpression !== undefined;
 }

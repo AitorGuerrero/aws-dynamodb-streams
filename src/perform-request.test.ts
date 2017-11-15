@@ -3,9 +3,9 @@ import {DynamoDB} from 'aws-sdk';
 import {IDynamoDocumentClientAsync} from 'aws-sdk-async';
 import {expect} from 'chai';
 import 'mocha';
-import {performScan} from './perform-scan';
+import {performRequest} from './perform-request';
 
-describe('scan class', () => {
+describe('Performing a request', () => {
 	let scanStream: Readable;
 	let documentClient: IDynamoDocumentClientAsync;
 	let request: DynamoDB.DocumentClient.ScanInput;
@@ -15,7 +15,7 @@ describe('scan class', () => {
 		documentClient = {scan: () => dynamoResponse.shift()} as any;
 		keySchema = [];
 		request = {} as any;
-		scanStream = performScan(documentClient, request, keySchema).stream;
+		scanStream = performRequest(documentClient, request, keySchema).stream;
 	});
 	describe('When dynamo fails', () => {
 		const error = new Error('TEST ERROR');
@@ -23,7 +23,7 @@ describe('scan class', () => {
 			documentClient.scan = () => { throw error; };
 		});
 		it ('stream should emit the error', async () => {
-			const response = performScan(documentClient, request, keySchema);
+			const response = performRequest(documentClient, request, keySchema);
 			try {
 				response.stream.resume();
 				await response.stream.ended;
@@ -37,7 +37,7 @@ describe('scan class', () => {
 	describe('When dynamo responds no items', () => {
 		beforeEach(() => dynamoResponse = [{}]);
 		it('Stream should emit end event', async () => {
-			const response = performScan(documentClient, request, keySchema);
+			const response = performRequest(documentClient, request, keySchema);
 			response.stream.resume();
 			await response.stream.ended;
 		});
@@ -49,7 +49,7 @@ describe('scan class', () => {
 			{Items: [{id: 'c'}]},
 		]);
 		it('Should return all the items', async () => {
-			const response = performScan(documentClient, request, keySchema);
+			const response = performRequest(documentClient, request, keySchema);
 			const data: any[] = [];
 			response.stream.on('data', (e) => data.push(e));
 			await response.stream.ended;
