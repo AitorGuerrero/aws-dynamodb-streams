@@ -1,5 +1,5 @@
+import {Readable, Transform} from '@aitor.guerrero/object-stream';
 import {DynamoDB} from 'aws-sdk';
-import {Readable, Transform} from 'stream';
 
 export default function limitStream(
 	stream: Readable & {LastEvaluatedKey: any},

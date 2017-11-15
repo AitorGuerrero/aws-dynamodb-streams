@@ -1,12 +1,12 @@
+import {Readable, Transform} from '@aitor.guerrero/object-stream';
 import {DynamoDB} from 'aws-sdk';
 import {IDynamoDocumentClientAsync} from 'aws-sdk-async';
-import {Readable} from 'stream';
 import limitStream from './limit-stream';
 import {Scan} from './scan.class';
 
 export interface IScanResponse {
 	LastEvaluatedKey: DynamoDB.DocumentClient.AttributeMap;
-	stream: Readable;
+	stream: Readable | Transform;
 }
 
 export function performScan(

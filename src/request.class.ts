@@ -1,5 +1,5 @@
+import {Readable} from '@aitor.guerrero/object-stream';
 import {DynamoDB} from 'aws-sdk';
-import {Readable} from 'stream';
 
 export interface Input {
 	Limit?: number;
@@ -21,10 +21,7 @@ export abstract class Request<I> extends Readable {
 	private sourceCompleted: boolean;
 
 	constructor(private input: I & Input) {
-		super({
-			highWaterMark: 0,
-			objectMode: true,
-		});
+		super({highWaterMark: 0});
 		this.cache = [];
 		this.sourceCompleted = false;
 		this.LastEvaluatedKey = new Promise<DynamoDB.DocumentClient.AttributeMap>((rs, rj) => {

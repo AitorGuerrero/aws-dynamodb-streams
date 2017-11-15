@@ -7,13 +7,12 @@
   "scripts": {
     "prepare": "npm run build",
     "preversion": "npm run testInstalls",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha -R dot ./lib/**/*.test.js",
     "prebuild": "rm -Rf ./lib && rm -Rf ./lib.d",
     "build": "tsc",
     "testInstalls": "npm install . -g",
-    "testBuilds": "tsc --noEmit",
     "testStyle": "tslint -p .",
-    "precommit": "npm run testStyle && npm run testBuilds"
+    "precommit": "npm run build && npm test && npm run testStyle"
   },
   "repository": {
     "type": "git",
@@ -31,13 +30,18 @@
   },
   "homepage": "https://github.com/AitorGuerrero/aws-dynamodb-streams#readme",
   "dependencies": {
-    "aws-sdk-async": "^1.0.0"
+    "@aitor.guerrero/object-stream": "^1.1.0",
+    "aws-sdk-async": "^1.8.0"
   },
   "devDependencies": {
-    "@types/node": "^8.0.44",
-    "aws-sdk": "^2.135.0",
+    "@types/chai": "^4.0.4",
+    "@types/mocha": "^2.2.44",
+    "@types/node": "^8.0.52",
+    "aws-sdk": "^2.150.0",
+    "chai": "^4.1.2",
     "husky": "^0.14.3",
-    "tslint": "^5.7.0",
-    "typescript": "^2.5.3"
+    "mocha": "^4.0.1",
+    "tslint": "^5.8.0",
+    "typescript": "^2.6.1"
   }
 }
