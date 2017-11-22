@@ -3,7 +3,7 @@ import {DynamoDB} from 'aws-sdk';
 import {IDynamoDocumentClientAsync} from 'aws-sdk-async';
 import {expect} from 'chai';
 import 'mocha';
-import {performRequest} from './perform-request';
+import {Request} from '.';
 
 describe('Performing a request', () => {
 	let scanStream: Readable;
@@ -15,7 +15,7 @@ describe('Performing a request', () => {
 		documentClient = {scan: () => dynamoResponse.shift()} as any;
 		keySchema = [];
 		request = {} as any;
-		scanStream = performRequest(documentClient, request, keySchema).stream;
+		scanStream = new Request(documentClient, request);
 	});
 	describe('When dynamo fails', () => {
 		const error = new Error('TEST ERROR');
@@ -23,10 +23,10 @@ describe('Performing a request', () => {
 			documentClient.scan = () => { throw error; };
 		});
 		it ('stream should emit the error', async () => {
-			const response = performRequest(documentClient, request, keySchema);
+			const response = new Request(documentClient, request);
 			try {
-				response.stream.resume();
-				await response.stream.ended;
+				response.resume();
+				await response.ended;
 
 				throw new Error('Should throw error');
 			} catch (err) {
@@ -37,9 +37,9 @@ describe('Performing a request', () => {
 	describe('When dynamo responds no items', () => {
 		beforeEach(() => dynamoResponse = [{}]);
 		it('Stream should emit end event', async () => {
-			const response = performRequest(documentClient, request, keySchema);
-			response.stream.resume();
-			await response.stream.ended;
+			const response = new Request(documentClient, request);
+			response.resume();
+			await response.ended;
 		});
 	});
 	describe('When dynamo responds various batches', () => {
@@ -49,10 +49,10 @@ describe('Performing a request', () => {
 			{Items: [{id: 'c'}]},
 		]);
 		it('Should return all the items', async () => {
-			const response = performRequest(documentClient, request, keySchema);
+			const response = new Request(documentClient, request);
 			const data: any[] = [];
-			response.stream.on('data', (e) => data.push(e));
-			await response.stream.ended;
+			response.on('data', (e) => data.push(e));
+			await response.ended;
 			expect(data.length).to.be.eq(3);
 			expect(data[0].id).to.be.eq('a');
 			expect(data[1].id).to.be.eq('b');

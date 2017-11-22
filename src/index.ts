@@ -1,1 +1,2 @@
-export * from './perform-request';
+export * from './request.class';
+export * from './item-generator.functor';
